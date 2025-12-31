@@ -23,6 +23,9 @@ LOG_MODEL_PATH = os.path.join(BASE_DIR, "models", "logistic_regression_model.job
 TREE_MODEL_PATH = os.path.join(BASE_DIR, "models", "decision_tree_model.joblib")
 
 # Load the models
+log_reg = None
+dec_tree = None
+
 try:
     log_reg = joblib.load(LOG_MODEL_PATH)
     dec_tree = joblib.load(TREE_MODEL_PATH)
@@ -45,6 +48,8 @@ def home():
 
 @app.post("/predict/{model_type}")
 def predict(model_type: str, data: CustomerData):
+    if log_reg is None or dec_tree is None:
+        return {"error": "Machine Learning models are not loaded on the server. Check logs."}
     # Convert incoming JSON data to a Pandas DataFrame for the model pipeline
     input_df = pd.DataFrame([data.dict()])
     
