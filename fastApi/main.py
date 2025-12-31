@@ -8,21 +8,21 @@ from pydantic import BaseModel
 # 1. Initialize FastAPI app
 app = FastAPI(title="Customer Churn Prediction API")
 
-# 2. Enable CORS (Cross-Origin Resource Sharing)
+# 2. Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins for development; update with Streamlit URL for production
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 3. Dynamic Path Loading
+# 3. Dynamic Path Loading (Confirmed by your GitHub structure)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOG_MODEL_PATH = os.path.join(BASE_DIR, "models", "logistic_regression_model.joblib")
 TREE_MODEL_PATH = os.path.join(BASE_DIR, "models", "decision_tree_model.joblib")
 
-# Load the models
+# Initialize as None to prevent NameError if loading fails
 log_reg = None
 dec_tree = None
 
@@ -33,7 +33,7 @@ try:
 except Exception as e:
     print(f"❌ Error loading models: {e}")
 
-# 4. Define the Data Schema
+# 4. Data Schema
 class CustomerData(BaseModel):
     Usage_Hours: int
     Subscription_Type: str
@@ -48,9 +48,10 @@ def home():
 
 @app.post("/predict/{model_type}")
 def predict(model_type: str, data: CustomerData):
+    # Safety Check: Return a clear error if models aren't loaded
     if log_reg is None or dec_tree is None:
-        return {"error": "Machine Learning models are not loaded on the server. Check logs."}
-    # Convert incoming JSON data to a Pandas DataFrame for the model pipeline
+        return {"error": "ML models are not loaded. Check backend version compatibility."}
+    
     input_df = pd.DataFrame([data.dict()])
     
     if model_type == "logistic":
